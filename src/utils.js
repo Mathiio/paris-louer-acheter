@@ -90,12 +90,11 @@ export function estimateLmnpRentPerM2() {
  * { id, name, desc, amount, rate, reserveForApport? }
  */
 export const PORTFOLIO_TEMPLATES = [
-  { name: 'Crowdlending', desc: 'Ex. Première Brique — taux net après fiscalité', amount: 0, rate: 0.085 },
   { name: 'Livret A / épargne réglementée', desc: 'Fonds d\'urgence, défiscalisé', amount: 0, rate: 0.0175, reserveForApport: true },
   { name: 'LEP', desc: 'Plafonné, sous conditions de revenus', amount: 0, rate: 0.025 },
   { name: 'Assurance-vie', desc: 'Fonds euros + UC — taux net estimé', amount: 0, rate: 0.06 },
   { name: 'CTO', desc: 'Compte-titres — flat tax déjà déduite si taux net', amount: 0, rate: 0.07 },
-  { name: 'Crypto / alternatif', desc: 'Actifs volatils — taux prudent', amount: 0, rate: 0.05 },
+  { name: 'Cryptomonnaie', desc: 'Actifs volatils — taux net / rendement prudent', amount: 0, rate: 0.05 },
   { name: 'Liquidités', desc: 'Compte courant, espèces', amount: 0, rate: 0 },
   { name: 'Autre placement', desc: 'Description libre', amount: 0, rate: 0.03 },
 ];
@@ -119,7 +118,7 @@ export const DEFAULT_PORTFOLIO = [
   { id: 'pf_livretA', name: 'Livret A / épargne réglementée', desc: 'Fonds d\'urgence, défiscalisé', amount: 25_000, rate: 0.0175, reserveForApport: true },
   { id: 'pf_av', name: 'Assurance-vie', desc: 'Fonds euros + UC — taux net estimé', amount: 35_000, rate: 0.05, reserveForApport: false },
   { id: 'pf_cto', name: 'CTO', desc: 'Compte-titres — flat tax si taux net', amount: 15_000, rate: 0.06, reserveForApport: false },
-  { id: 'pf_crowdlending', name: 'Crowdlending', desc: 'Plateforme de financement participatif', amount: 15_000, rate: 0.07, reserveForApport: false },
+  { id: 'pf_crypto', name: 'Cryptomonnaie', desc: 'Actifs volatils — taux net / rendement prudent', amount: 15_000, rate: 0.05, reserveForApport: false },
   { id: 'pf_liquide', name: 'Liquidités', desc: 'Compte courant', amount: 10_000, rate: 0, reserveForApport: false },
 ];
 
