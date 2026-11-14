@@ -415,8 +415,10 @@ export function resolveFinancing(p, monthlyGrossIncome) {
 
   const loanShortfall = need;
   const liquidAfterApport = Math.max(0, p.currentWealth - ownContribution);
-  const extraFromSavings = Math.min(loanShortfall, liquidAfterApport);
-  const remainingShortfall = loanShortfall - extraFromSavings;
+  /** On ne prélève pas l'épargne restante automatiquement : l'écart reste à combler (prêt, apport, etc.). */
+  const extraFromSavings = 0;
+  const remainingShortfall = loanShortfall;
+  const shortfallBeyondLiquid = Math.max(0, loanShortfall - liquidAfterApport);
 
   const resolved = configs.map(loan => {
     const principal = principalById[loan.id];
@@ -470,8 +472,10 @@ export function resolveFinancing(p, monthlyGrossIncome) {
     hcsfOver: hcsfMonthly > maxPayment + 0.01,
     extraFromSavings,
     remainingShortfall,
+    shortfallBeyondLiquid,
+    liquidAfterApport,
     loanFeasible: remainingShortfall <= 0,
-    investableSavings: Math.max(0, liquidAfterApport - extraFromSavings),
+    investableSavings: liquidAfterApport,
     resolvedLoans: resolved,
   };
 }

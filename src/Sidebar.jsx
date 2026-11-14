@@ -177,14 +177,21 @@ export default function Sidebar({ p, set, setLoans, wealth, result }) {
             {meta?.waiting?.waitMonths > 0 ? ' (au démarrage)' : ''}
             {' : '}
             <strong className="text-foreground">{fmt(remaining)}</strong>
-            {meta?.extraFromSavings > 0 && (
-              <> · complément prêt : <strong className="text-warning">{fmt(meta.extraFromSavings)}</strong></>
-            )}
           </SimHint>
 
           {!meta?.loanFeasible && meta && (
-            <SimAlert title="Financement incomplet">
-              Il manque {fmt(meta.remainingShortfall)} au-delà de votre épargne liquide disponible.
+            <SimAlert title="Financement incomplet" className="border border-danger/50 bg-danger/10">
+              {meta.shortfallBeyondLiquid > 0 ? (
+                <>
+                  Il manque {fmt(meta.remainingShortfall)} pour couvrir l&apos;acquisition, dont{' '}
+                  {fmt(meta.shortfallBeyondLiquid)} au-delà de votre épargne liquide après apport.
+                </>
+              ) : (
+                <>
+                  Il manque {fmt(meta.remainingShortfall)} : augmentez les prêts, l&apos;apport
+                  complémentaire ou réduisez l&apos;apport personnel.
+                </>
+              )}
             </SimAlert>
           )}
 

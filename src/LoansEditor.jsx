@@ -2,7 +2,7 @@ import { Button } from '@heroui/react';
 import { fmt, pct } from './utils.js';
 import { newLoan, sanitizeLoan } from './loans.js';
 import { SimSelect, SimSlider } from './ui/simControls.jsx';
-import { SimHint, SimStatRow } from './ui/primitives.jsx';
+import { SimAlert, SimHint, SimStatRow } from './ui/primitives.jsx';
 
 const AMOUNT_MODE_OPTIONS = [
   { value: 'manual', label: 'Montant fixe' },
@@ -193,7 +193,11 @@ export default function LoansEditor({
       </Button>
 
       {meta && (
-        <section className="rounded-lg border border-border bg-surface-secondary p-3 space-y-1">
+        <section
+          className={`rounded-lg border bg-surface-secondary p-3 space-y-1 ${
+            !meta.loanFeasible ? 'border-danger/60 ring-1 ring-danger/20' : 'border-border'
+          }`}
+        >
           <p className="mb-1.5 text-xs font-medium text-accent-soft-foreground">
             Synthèse HCSF ({pct(debtRatioCap * 100)} du brut)
           </p>
@@ -204,12 +208,37 @@ export default function LoansEditor({
             tone={meta.hcsfOver ? 'neg' : undefined}
           />
           <SimStatRow label="Mensualités crédit" value={`${fmt(meta.totalMonthlyLoan)}/m`} />
+          {meta.remainingShortfall > 0 && (
+            <SimStatRow
+              label="Manque au financement"
+              value={fmt(meta.remainingShortfall)}
+              tone="neg"
+            />
+          )}
           {meta.hcsfOver && (
             <SimHint tone="danger" className="mb-0 mt-1">
               Dépassement du plafond d&apos;endettement sur les prêts marqués HCSF.
             </SimHint>
           )}
         </section>
+      )}
+
+      {meta && !meta.loanFeasible && (
+        <SimAlert title="Financement incomplet" className="border border-danger/50 bg-danger/10">
+          {meta.shortfallBeyondLiquid > 0 ? (
+            <>
+              Il manque {fmt(meta.remainingShortfall)} pour couvrir l&apos;acquisition, dont{' '}
+              {fmt(meta.shortfallBeyondLiquid)} au-delà de votre épargne liquide après apport. Les
+              scénarios d&apos;achat restent indicatifs tant que le plan n&apos;est pas bouclé.
+            </>
+          ) : (
+            <>
+              Il manque {fmt(meta.remainingShortfall)} (apport + prêts insuffisants). Ajustez le
+              financement ci-dessus : la synthèse HCSF ne remplit plus automatiquement avec
+              l&apos;épargne restante.
+            </>
+          )}
+        </SimAlert>
       )}
     </div>
   );
