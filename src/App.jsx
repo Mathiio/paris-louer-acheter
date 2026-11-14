@@ -47,7 +47,7 @@ const VIEW_TITLE = {
   portfolio: 'Patrimoine de départ',
   table: 'Tableau mensuel',
   'chart-projection': 'Projection patrimoine',
-  'chart-gap': 'Écart vs location',
+  'chart-gap': 'Avantage achat vs rester locataire',
   'chart-composition': 'Composition du patrimoine',
 };
 

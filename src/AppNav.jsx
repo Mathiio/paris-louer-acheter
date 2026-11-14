@@ -154,7 +154,7 @@ export default function AppNav({ view, onChange, collapsed = false }) {
         onPress={() => onChange('chart-gap')}
         className={collapsed ? '' : 'lg:ps-3'}
       >
-        Écart location
+        Vs location
       </NavButton>
       <NavButton
         active={view === 'chart-composition'}

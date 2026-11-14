@@ -10,13 +10,17 @@ import ChartHoverTooltip, { useChartExternalTooltip } from './ChartHoverTooltip.
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
+const REF_LABEL = 'Référence : rester locataire (0 €)';
+const LABEL_BUY_SELL = 'Achat + Revente − location';
+const LABEL_LMNP = 'Achat + LMNP − location';
+
 const LEGEND_ITEMS = [
-  { key: 'buySell',  label: '2. Achat + Revente', color: COLORS.buySell },
-  { key: 'lmnpKeep', label: '3. Achat + LMNP',     color: COLORS.lmnpKeep, thick: true },
-  { key: 'seuil',    label: 'Seuil (location)',    dashed: true },
+  { key: 'buySell', label: LABEL_BUY_SELL, color: COLORS.buySell },
+  { key: 'lmnpKeep', label: LABEL_LMNP, color: COLORS.lmnpKeep, thick: true },
+  { key: 'seuil', label: REF_LABEL, dashed: true },
 ];
 
-const isThreshold = (label) => label === 'Seuil (location)';
+const isThreshold = (label) => label === REF_LABEL;
 
 const formatGap = (v) => `${v >= 0 ? '+' : ''}${fmt(v)}`;
 
@@ -37,9 +41,33 @@ export default function GapChart({ result, theme }) {
   const data = {
     labels,
     datasets: [
-      { label: 'Seuil (location)', data: sample(rent.map(() => 0)), borderColor: axis.tick, borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, fill: false },
-      { label: '2. Achat + Revente', data: sample(gap(buySell)), borderColor: COLORS.buySell, backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 0 },
-      { label: '3. Achat + LMNP',    data: sample(gap(lmnpKeep)),borderColor: COLORS.lmnpKeep,backgroundColor: 'transparent', borderWidth: 3, tension: 0.3, pointRadius: 0 },
+      {
+        label: REF_LABEL,
+        data: sample(rent.map(() => 0)),
+        borderColor: axis.tick,
+        borderDash: [4, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+      },
+      {
+        label: LABEL_BUY_SELL,
+        data: sample(gap(buySell)),
+        borderColor: COLORS.buySell,
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 0,
+      },
+      {
+        label: LABEL_LMNP,
+        data: sample(gap(lmnpKeep)),
+        borderColor: COLORS.lmnpKeep,
+        backgroundColor: 'transparent',
+        borderWidth: 3,
+        tension: 0.3,
+        pointRadius: 0,
+      },
     ],
   };
 
@@ -55,14 +83,25 @@ export default function GapChart({ result, theme }) {
       x: { grid: { color: axis.grid }, ticks: { color: axis.tick, font: { size: 10 } } },
       y: {
         grid: { color: axis.grid },
-        ticks: { color: axis.tick, font: { size: 10 }, callback: v => fmt(v) },
+        ticks: { color: axis.tick, font: { size: 10 }, callback: v => formatGap(v) },
+        title: {
+          display: true,
+          text: 'Écart de patrimoine net (€)',
+          color: axis.tick,
+          font: { size: 10, weight: '500' },
+        },
       },
     },
   };
 
   const { crossovers } = result.meta ?? {};
-  const rows = [
-    { key: 'buySell',  label: 'Achat + Revente' },
+  const lastIdx = buySell.length - 1;
+  const endGapBuySell = gap(buySell)[lastIdx];
+  const endGapLmnp = gap(lmnpKeep)[lastIdx];
+  const horizonLabel = result.labels[lastIdx] ?? '';
+
+  const crossoverRows = [
+    { key: 'buySell', label: 'Achat + Revente' },
     { key: 'lmnpKeep', label: 'Achat + LMNP' },
   ].filter(r => crossovers?.[r.key] != null);
 
@@ -73,15 +112,34 @@ export default function GapChart({ result, theme }) {
         <ChartHoverTooltip state={tooltip} />
         <Line data={data} options={options} />
       </div>
-      <p className="mt-3 shrink-0 text-center text-xs leading-relaxed text-muted">
-        {rows.length > 0 ? (
-          <>Point de bascule : {rows.map((r, i) => (
-            <span key={r.key}>{i > 0 && ' · '}<strong>{r.label}</strong> à {crossovers[r.key].toFixed(1)} ans</span>
-          ))}.</>
-        ) : (
-          'Avec les paramètres actuels, aucun scénario d\'achat ne dépasse la location sur l\'horizon simulé.'
-        )}
-      </p>
+      <div className="mt-3 shrink-0 space-y-1.5 text-center text-xs leading-relaxed text-muted">
+        <p>
+          À l&apos;horizon ({horizonLabel}) : Achat + Revente{' '}
+          <strong className="text-foreground tabular-nums">{formatGap(endGapBuySell)}</strong>
+          {' · '}Achat + LMNP{' '}
+          <strong className="text-foreground tabular-nums">{formatGap(endGapLmnp)}</strong>
+          {' '}vs location.
+        </p>
+        <p>
+          {crossoverRows.length > 0 ? (
+            <>
+              Première année où la courbe passe au-dessus de 0 :{' '}
+              {crossoverRows.map((r, i) => (
+                <span key={r.key}>
+                  {i > 0 && ' · '}
+                  <strong>{r.label}</strong> vers {crossovers[r.key].toFixed(1)} ans
+                </span>
+              ))}
+              .
+            </>
+          ) : (
+            <>
+              Sur l&apos;horizon simulé, aucun scénario d&apos;achat ne repasse au-dessus de la
+              location (courbes toujours sous 0 €).
+            </>
+          )}
+        </p>
+      </div>
     </div>
   );
 }
