@@ -24,25 +24,6 @@ function patchLoan(loans, id, patch) {
   return loans.map(l => (l.id === id ? sanitizeLoan({ ...l, ...patch }) : l));
 }
 
-function financingIncompleteCopy(meta) {
-  if (meta.shortfallBeyondLiquid > 0) {
-    return (
-      <>
-        Il manque {fmt(meta.remainingShortfall)} pour couvrir l&apos;acquisition, dont{' '}
-        {fmt(meta.shortfallBeyondLiquid)} au-delà de votre épargne liquide après apport. Les
-        scénarios d&apos;achat restent indicatifs tant que le plan n&apos;est pas bouclé.
-      </>
-    );
-  }
-  return (
-    <>
-      Il manque {fmt(meta.remainingShortfall)} : augmentez les prêts, l&apos;apport complémentaire
-      ou réduisez l&apos;apport personnel. L&apos;épargne restante n&apos;est pas utilisée
-      automatiquement.
-    </>
-  );
-}
-
 /** Carte récap financement — HCSF + alerte intégrée si besoin */
 const financeCardClass = (incomplete) =>
   `rounded-lg border p-3 space-y-2 ${
@@ -224,9 +205,6 @@ export default function LoansEditor({
           {!meta.loanFeasible && (
             <div className="space-y-1 pb-2 border-b border-danger/25">
               <p className="text-sm font-semibold text-danger">Financement incomplet</p>
-              <p className="text-xs leading-relaxed text-foreground">
-                {financingIncompleteCopy(meta)}
-              </p>
             </div>
           )}
           <p className="text-xs font-medium text-accent-soft-foreground">
