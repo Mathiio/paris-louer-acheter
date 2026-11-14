@@ -63,7 +63,7 @@ Aucune clé API ni compte externe.
 ## Installation et lancement
 
 ```bash
-git clone https://github.com/<votre-compte>/paris-louer-acheter.git
+git clone https://github.com/Mathiio/paris-louer-acheter.git
 cd paris-louer-acheter
 npm install
 npm run dev
@@ -89,6 +89,8 @@ Le fichier [`netlify.toml`](netlify.toml) configure build et publication (`dist/
 3. Netlify lit `netlify.toml` automatiquement ; validez **Deploy site**.
 
 Chaque push sur la branche `main` redéploie le site. Aucune variable d’environnement n’est requise.
+
+**Démo en ligne :** [paris-louer-acheter.netlify.app](https://paris-louer-acheter.netlify.app) (avec les hypothèses de démonstration du dépôt, pas vos données locales).
 
 ---
 

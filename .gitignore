@@ -20,6 +20,9 @@ appart-*.json
 *-sim-params*.json
 public/defaults.local.json
 
+# Netlify local link state (deploy config is in netlify.toml)
+.netlify
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
