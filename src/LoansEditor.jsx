@@ -2,7 +2,7 @@ import { Button } from '@heroui/react';
 import { fmt, pct } from './utils.js';
 import { newLoan, sanitizeLoan } from './loans.js';
 import { SimSelect, SimSlider } from './ui/simControls.jsx';
-import { SimAlert, SimHint, SimStatRow } from './ui/primitives.jsx';
+import { SimHint, SimStatRow } from './ui/primitives.jsx';
 
 const AMOUNT_MODE_OPTIONS = [
   { value: 'manual', label: 'Montant fixe' },
@@ -23,6 +23,33 @@ function labelForRole(role) {
 function patchLoan(loans, id, patch) {
   return loans.map(l => (l.id === id ? sanitizeLoan({ ...l, ...patch }) : l));
 }
+
+function financingIncompleteCopy(meta) {
+  if (meta.shortfallBeyondLiquid > 0) {
+    return (
+      <>
+        Il manque {fmt(meta.remainingShortfall)} pour couvrir l&apos;acquisition, dont{' '}
+        {fmt(meta.shortfallBeyondLiquid)} au-delà de votre épargne liquide après apport. Les
+        scénarios d&apos;achat restent indicatifs tant que le plan n&apos;est pas bouclé.
+      </>
+    );
+  }
+  return (
+    <>
+      Il manque {fmt(meta.remainingShortfall)} : augmentez les prêts, l&apos;apport complémentaire
+      ou réduisez l&apos;apport personnel. L&apos;épargne restante n&apos;est pas utilisée
+      automatiquement.
+    </>
+  );
+}
+
+/** Carte récap financement — HCSF + alerte intégrée si besoin */
+const financeCardClass = (incomplete) =>
+  `rounded-lg border p-3 space-y-2 ${
+    incomplete
+      ? 'border-danger/50 bg-danger/10'
+      : 'border-border bg-surface-secondary'
+  }`;
 
 export default function LoansEditor({
   loans,
@@ -62,7 +89,7 @@ export default function LoansEditor({
         return (
           <section
             key={loan.id}
-            className="rounded-lg border border-border bg-surface-secondary/80 p-2.5 space-y-2"
+            className="rounded-lg border border-border bg-surface-secondary p-2.5 space-y-2"
           >
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1 space-y-2">
@@ -193,52 +220,40 @@ export default function LoansEditor({
       </Button>
 
       {meta && (
-        <section
-          className={`rounded-lg border bg-surface-secondary p-3 space-y-1 ${
-            !meta.loanFeasible ? 'border-danger/60 ring-1 ring-danger/20' : 'border-border'
-          }`}
-        >
-          <p className="mb-1.5 text-xs font-medium text-accent-soft-foreground">
+        <section className={financeCardClass(!meta.loanFeasible)}>
+          {!meta.loanFeasible && (
+            <div className="space-y-1 pb-2 border-b border-danger/25">
+              <p className="text-sm font-semibold text-danger">Financement incomplet</p>
+              <p className="text-xs leading-relaxed text-foreground">
+                {financingIncompleteCopy(meta)}
+              </p>
+            </div>
+          )}
+          <p className="text-xs font-medium text-accent-soft-foreground">
             Synthèse HCSF ({pct(debtRatioCap * 100)} du brut)
           </p>
-          <SimStatRow label="Plafond mensualités" value={`${fmt(meta.maxPayment)}/m`} tone="warn" />
-          <SimStatRow
-            label="Retenue HCSF"
-            value={`${fmt(meta.hcsfMonthly ?? meta.totalMonthlyLoan)}/m`}
-            tone={meta.hcsfOver ? 'neg' : undefined}
-          />
-          <SimStatRow label="Mensualités crédit" value={`${fmt(meta.totalMonthlyLoan)}/m`} />
-          {meta.remainingShortfall > 0 && (
+          <div className="space-y-0.5">
+            <SimStatRow label="Plafond mensualités" value={`${fmt(meta.maxPayment)}/m`} tone="warn" />
             <SimStatRow
-              label="Manque au financement"
-              value={fmt(meta.remainingShortfall)}
-              tone="neg"
+              label="Retenue HCSF"
+              value={`${fmt(meta.hcsfMonthly ?? meta.totalMonthlyLoan)}/m`}
+              tone={meta.hcsfOver ? 'neg' : undefined}
             />
-          )}
+            <SimStatRow label="Mensualités crédit" value={`${fmt(meta.totalMonthlyLoan)}/m`} />
+            {meta.remainingShortfall > 0 && (
+              <SimStatRow
+                label="Manque au financement"
+                value={fmt(meta.remainingShortfall)}
+                tone="neg"
+              />
+            )}
+          </div>
           {meta.hcsfOver && (
-            <SimHint tone="danger" className="mb-0 mt-1">
+            <SimHint tone="danger" className="mb-0">
               Dépassement du plafond d&apos;endettement sur les prêts marqués HCSF.
             </SimHint>
           )}
         </section>
-      )}
-
-      {meta && !meta.loanFeasible && (
-        <SimAlert title="Financement incomplet" className="border border-danger/50 bg-danger/10">
-          {meta.shortfallBeyondLiquid > 0 ? (
-            <>
-              Il manque {fmt(meta.remainingShortfall)} pour couvrir l&apos;acquisition, dont{' '}
-              {fmt(meta.shortfallBeyondLiquid)} au-delà de votre épargne liquide après apport. Les
-              scénarios d&apos;achat restent indicatifs tant que le plan n&apos;est pas bouclé.
-            </>
-          ) : (
-            <>
-              Il manque {fmt(meta.remainingShortfall)} (apport + prêts insuffisants). Ajustez le
-              financement ci-dessus : la synthèse HCSF ne remplit plus automatiquement avec
-              l&apos;épargne restante.
-            </>
-          )}
-        </SimAlert>
       )}
     </div>
   );

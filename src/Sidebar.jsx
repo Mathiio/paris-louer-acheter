@@ -10,7 +10,7 @@ import {
   SimSwitch,
 } from './ui/simControls.jsx';
 import {
-  SimAlert, SimApplyEstimate, SimHint, SimInfoCard, SimInfoTip,
+  SimApplyEstimate, SimHint, SimInfoCard, SimInfoTip,
 } from './ui/primitives.jsx';
 import LoansEditor from './LoansEditor.jsx';
 import { resolveLoansList, ownContributionTotal } from './loans.js';
@@ -178,22 +178,6 @@ export default function Sidebar({ p, set, setLoans, wealth, result }) {
             {' : '}
             <strong className="text-foreground">{fmt(remaining)}</strong>
           </SimHint>
-
-          {!meta?.loanFeasible && meta && (
-            <SimAlert title="Financement incomplet" className="border border-danger/50 bg-danger/10">
-              {meta.shortfallBeyondLiquid > 0 ? (
-                <>
-                  Il manque {fmt(meta.remainingShortfall)} pour couvrir l&apos;acquisition, dont{' '}
-                  {fmt(meta.shortfallBeyondLiquid)} au-delà de votre épargne liquide après apport.
-                </>
-              ) : (
-                <>
-                  Il manque {fmt(meta.remainingShortfall)} : augmentez les prêts, l&apos;apport
-                  complémentaire ou réduisez l&apos;apport personnel.
-                </>
-              )}
-            </SimAlert>
-          )}
 
           <LoansEditor
             loans={p.loans ?? resolveLoansList(p)}
