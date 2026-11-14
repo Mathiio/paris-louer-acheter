@@ -1,16 +1,16 @@
 import {
   fmt, pct,
   estimatePropertyTax, estimateLmnpRent, estimateLmnpRentPerM2,
+  effectiveSavingsYield,
 } from './utils.js';
 import {
   SimSlider,
   SimSelect,
-  SimSeg,
   SimSettingsBlock,
   SimSwitch,
 } from './ui/simControls.jsx';
 import {
-  SimAlert, SimApplyEstimate, SimFieldLabel, SimHint, SimInfoCard, SimInfoTip,
+  SimAlert, SimApplyEstimate, SimHint, SimInfoCard, SimInfoTip,
 } from './ui/primitives.jsx';
 import LoansEditor from './LoansEditor.jsx';
 import { resolveLoansList, ownContributionTotal } from './loans.js';
@@ -18,6 +18,8 @@ import { resolveLoansList, ownContributionTotal } from './loans.js';
 const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 export default function Sidebar({ p, set, setLoans, wealth, result }) {
+  const savingsYieldAuto = (p.savingsYieldMode ?? 'auto') === 'auto';
+  const savingsYieldUsed = effectiveSavingsYield(p);
   const apport = ownContributionTotal(p);
   const wealthAtStart = result?.meta?.waiting?.effectiveWealth ?? wealth;
   const remaining = wealthAtStart - apport;
@@ -197,21 +199,22 @@ export default function Sidebar({ p, set, setLoans, wealth, result }) {
         </SimSettingsBlock>
 
         <SimSettingsBlock id="income" title="Revenus & épargne">
-          <SimFieldLabel
-            label="Statut"
-            info={(
-              <>
-                Ratio cotisations salariales retenu : brut → net ≈{' '}
-                {pct((p.employeeStatus === 'nonCadre' ? 78 : 76))}.
-              </>
-            )}
-            infoLabel="Cotisations salariales"
-          />
-          <SimSeg
-            value={p.employeeStatus ?? 'cadre'}
-            onChange={v => set('employeeStatus', v)}
-            options={[{ value: 'cadre', label: 'Cadre' }, { value: 'nonCadre', label: 'Non-cadre' }]}
-          />
+          <div className="sim-control mb-3 flex min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-0.5">
+              <span className="text-sm text-muted leading-snug">Statut cadre</span>
+              <SimInfoTip label="Cotisations salariales">
+                Si coché : cotisations salariales plus élevées (retraite compl. cadre, APEC…), brut → net ≈{' '}
+                {pct(76)}. Décoché : non-cadre, brut → net ≈ {pct(78)}. N&apos;affecte pas le calcul HCSF (revenus
+                bruts).
+              </SimInfoTip>
+            </div>
+            <SimSwitch
+              className="shrink-0"
+              checked={(p.employeeStatus ?? 'cadre') === 'cadre'}
+              onChange={v => set('employeeStatus', v ? 'cadre' : 'nonCadre')}
+              aria-label="Statut cadre"
+            />
+          </div>
 
           <SimSlider
             label="Salaire CDI brut (2026)"
@@ -256,6 +259,43 @@ export default function Sidebar({ p, set, setLoans, wealth, result }) {
           <SimSlider label="Nourriture & sorties" valueLabel={`${p.variableExpenses} €/m`}
  min={100} max={700} step={25}
             value={p.variableExpenses} onChange={v => set('variableExpenses', v)} />
+
+          <div className="sim-control mb-3 flex min-w-0 items-center justify-between gap-3 border-t border-border pt-4">
+            <div className="flex min-w-0 flex-1 items-center gap-0.5">
+              <span className="text-sm text-muted leading-snug">Rendement selon le patrimoine</span>
+              <SimInfoTip label="Rendement des placements">
+                En mode auto, l&apos;épargne liquide fructifie au taux moyen pondéré des lignes de l&apos;onglet
+                Patrimoine (hors réserve apport, gérée à part pour l&apos;achat). En mode manuel, vous fixez un
+                rendement unique pour toute l&apos;épargne placée dans les scénarios.
+              </SimInfoTip>
+            </div>
+            <SimSwitch
+              className="shrink-0"
+              checked={savingsYieldAuto}
+              onChange={v => set('savingsYieldMode', v ? 'auto' : 'manual')}
+              aria-label="Rendement selon le patrimoine"
+            />
+          </div>
+
+          {savingsYieldAuto ? (
+            <SimHint className="mb-3">
+              Taux retenu : <strong className="text-foreground">{pct(savingsYieldUsed * 100)}</strong>
+              {wealth > 0
+                ? ` — moyenne pondérée des taux Patrimoine (${fmt(wealth)}).`
+                : ' — ajoutez des lignes dans Patrimoine ou passez en mode manuel.'}
+            </SimHint>
+          ) : (
+            <SimSlider
+              label="Rendement annuel net (épargne)"
+              valueLabel={pct(p.savingsYieldManual * 100)}
+              min={0}
+              max={12}
+              step={0.25}
+              value={(p.savingsYieldManual ?? 0.06) * 100}
+              onChange={v => set('savingsYieldManual', v / 100)}
+              info="Taux net après impôts / flat tax, appliqué à l’épargne liquide dans les trois scénarios."
+            />
+          )}
 
         </SimSettingsBlock>
 
