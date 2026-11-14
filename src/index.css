@@ -1,0 +1,259 @@
+@import "tailwindcss";
+@source "./**/*.{js,jsx,ts,tsx}";
+@source "../node_modules/@heroui/react/dist/**/*.{js,mjs}";
+@import "@heroui/styles";
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  /* Accent & fonds alignés sur la charte (moins de gris neutre) */
+  :root,
+  :host {
+    --accent: oklch(0.552 0.21 264);
+    --accent-foreground: var(--snow);
+  }
+
+  :root,
+  .light,
+  [data-theme="light"] {
+    --background: oklch(0.994 0.008 264);
+    --surface: var(--white);
+    --surface-secondary: oklch(0.978 0.012 264);
+    --default: oklch(0.962 0.016 264);
+    --border: oklch(0.9 0.014 264);
+    --segment: var(--white);
+
+    --accent: oklch(0.552 0.21 264);
+    --chart-grid: oklch(0.552 0.21 264 / 0.08);
+    --tooltip-bg: oklch(1 0 0 / 0.96);
+    color-scheme: light;
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    --background: oklch(0.13 0.02 285);
+    --surface: oklch(0.19 0.015 285);
+    --surface-secondary: oklch(0.22 0.014 285);
+    --default: oklch(0.26 0.012 285);
+    --border: oklch(0.32 0.012 285);
+
+    --accent: oklch(0.68 0.17 264);
+    --chart-grid: oklch(0.68 0.17 264 / 0.12);
+    --tooltip-bg: oklch(0.16 0.02 285 / 0.94);
+    color-scheme: dark;
+  }
+
+  html {
+    transition: background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1), color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--background);
+    color: var(--foreground);
+    min-height: 100vh;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1), color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 0.55s;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+}
+
+/* Variables chart.js (indépendantes de HeroUI) */
+:root {
+  --green:         #35b587;
+  --amber:         #d9a441;
+  --red:           #e2685f;
+  --font-body:     'Inter', system-ui, sans-serif;
+  --font-head:     'Outfit', 'Inter', system-ui, sans-serif;
+  --text:          var(--foreground);
+  --text-muted:    var(--muted);
+  --text-dim:      color-mix(in oklab, var(--muted) 85%, var(--foreground));
+  --border-strong: color-mix(in oklab, var(--border) 70%, var(--foreground));
+}
+
+:root[data-theme='light'] {
+  --green:         #178f68;
+  --amber:         #b3791a;
+  --red:           #c2453d;
+}
+
+@layer components {
+  .app-nav-shell {
+    transition:
+      width 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
+      padding 0.35s ease,
+      box-shadow 0.35s ease,
+      background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .app-table-wrap,
+  .sim-settings-block,
+  .app-view-panel {
+    transition:
+      background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (min-width: 1024px) {
+    .app-nav-shell {
+      width: 15rem;
+    }
+
+    .app-nav-shell[data-collapsed='true'] {
+      width: 4.25rem;
+      padding-inline: 0.5rem;
+    }
+
+    .app-nav-shell[data-collapsed='true'] .app-nav-toggle {
+      margin-inline: auto;
+    }
+  }
+
+  .app-nav-rail .app-nav-btn,
+  .app-nav-shell .app-nav-toggle {
+    border-radius: 0.5rem !important;
+  }
+
+  .app-nav-rail .app-nav-icon-slot {
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+
+  .app-nav-btn:hover .app-nav-icon-slot {
+    background-color: color-mix(in oklab, var(--default) 85%, transparent);
+  }
+
+  .app-nav-btn--active:hover .app-nav-icon-slot {
+    background-color: var(--accent-soft);
+  }
+
+  .app-nav-btn {
+    transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  .app-nav-btn:active {
+    transform: scale(0.96);
+  }
+
+  .app-nav-btn[data-pressed='true'] {
+    transform: scale(0.97);
+  }
+
+  .sim-settings-heading {
+    letter-spacing: 0.04em;
+  }
+
+  @keyframes app-view-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.992);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .app-view-panel,
+  .app-view-title {
+    animation: app-view-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-nav-shell,
+    .app-nav-btn,
+    .app-view-panel,
+    .app-view-title {
+      animation: none;
+      transition: none;
+    }
+  }
+
+  .app-table-wrap {
+    @apply overflow-x-auto rounded-lg border border-border bg-surface;
+  }
+
+  /* Onglets sans Tabs.Indicator (évite SharedElementTransition / ListContainer) */
+  .app-nav-tabs .tabs__list {
+    @apply inline-flex w-auto min-w-0 gap-0 border-0 p-0;
+  }
+
+  .app-nav-tabs .tabs__tab {
+    @apply h-9 rounded-none px-3 sm:px-4 text-sm font-medium text-muted;
+  }
+
+  .app-nav-tabs .tabs__tab[data-selected="true"] {
+    @apply text-accent-soft-foreground;
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .app-nav-tabs .tabs__tab[data-selected="true"] .tabs__separator,
+  .app-nav-tabs .tabs__tab[data-selected="true"] + .tabs__tab .tabs__separator {
+    @apply opacity-0;
+  }
+
+  .app-nav-tabs .tabs__panel[data-orientation="horizontal"] {
+    @apply mt-0 min-h-0;
+  }
+
+  /* Remplir la hauteur sous le header (graphique) */
+  .app-nav-tabs {
+    @apply min-h-0;
+  }
+
+  .app-nav-tabs [data-slot="tabs-panel"][data-selected="true"],
+  .app-nav-tabs .tabs__panel[data-selected="true"] {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  /* Sidebar — titres de sections accordion */
+  .sim-sidebar-acc .sim-section-item {
+    @apply mb-1;
+  }
+
+  .sim-sidebar-acc .sim-section-item::after {
+    @apply opacity-40;
+  }
+
+  .sim-sidebar-acc .sim-section-title {
+    @apply text-xs font-semibold uppercase tracking-wide text-muted;
+  }
+
+  .sim-sidebar-acc .sim-section-trigger[aria-expanded="true"] {
+    @apply bg-accent-soft;
+  }
+
+  .sim-sidebar-acc .sim-section-trigger[aria-expanded="true"] .sim-section-title {
+    @apply text-accent-soft-foreground;
+  }
+
+  .sim-sidebar-acc .sim-section-trigger[aria-expanded="true"] .accordion__indicator {
+    @apply text-accent-soft-foreground;
+  }
+
+  .sim-sidebar-acc .sim-section-trigger:not([aria-expanded="true"]):hover {
+    @apply bg-surface-secondary;
+  }
+
+  /* Infos / aides juste sous un slider, select ou segment */
+  .sim-sidebar-acc .sim-control + .sim-hint {
+    @apply -mt-2 mb-3 leading-snug;
+  }
+
+  .sim-sidebar-acc .sim-control + .sim-estimate {
+    @apply -mt-2 mb-3;
+  }
+}
+
