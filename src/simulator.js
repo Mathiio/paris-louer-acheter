@@ -113,6 +113,8 @@ function monthlyExpenses(m, p) {
 /**
  * Simule la période d'attente entre la date du patrimoine de référence et le début du projet.
  * Hypothèse : on reste locataire, on épargne le surplus et les placements fructifient.
+ * L'apport de financement n'intervient pas ici : le patrimoine au démarrage ne dépend
+ * que du portefeuille, des revenus et de la chronologie (pas du montant d'apport saisi).
  */
 export function simulateWaitingPeriod(p) {
   const { year: baseYear, month: baseMonth } = wealthBaselineNow();
@@ -134,10 +136,8 @@ export function simulateWaitingPeriod(p) {
     };
   }
 
-  let reserve = p.apport;
-  let liquid = Math.max(0, baselineWealth - p.apport);
+  let wealth = baselineWealth;
   let rentAmt = p.currentRent;
-  const reserveYield = p.apportReserveYield ?? 0.0175;
   let cashFlowTotal = 0;
   let interestEarned = 0;
 
@@ -146,15 +146,13 @@ export function simulateWaitingPeriod(p) {
     const income = monthlyIncomeAt(m, p, baseYear, baseMonth);
     const expenses = monthlyExpenses(m, p);
     const cashFlow = income - rentAmt - expenses;
-    const reserveInterest = reserve * (reserveYield / 12);
-    const liquidInterest = liquid * (p.savingsYield / 12);
-    interestEarned += reserveInterest + liquidInterest;
+    const interest = wealth * ((p.savingsYield ?? 0) / 12);
+    interestEarned += interest;
     cashFlowTotal += cashFlow;
-    reserve += reserveInterest;
-    liquid += liquidInterest + cashFlow;
+    wealth += interest + cashFlow;
   }
 
-  const effectiveWealth = reserve + liquid;
+  const effectiveWealth = wealth;
 
   return {
     effectiveWealth,
@@ -166,6 +164,11 @@ export function simulateWaitingPeriod(p) {
     baselineYear: baseYear,
     baselineMonth: baseMonth,
   };
+}
+
+/** Patrimoine total disponible au moment de l'achat (après période d'attente éventuelle). */
+export function wealthAtPurchase(p) {
+  return simulateWaitingPeriod(p).effectiveWealth;
 }
 
 function applyDeferredRepayments(surplus, balances, deferredLoans, p) {
@@ -220,7 +223,7 @@ export function monthlyBudget(m, p, mortgage) {
  */
 export function runSimulation(p) {
   const apport = ownContributionTotal(p);
-  const waiting = simulateWaitingPeriod({ ...p, apport });
+  const waiting = simulateWaitingPeriod(p);
   const sp = { ...p, apport, currentWealth: waiting.effectiveWealth };
 
   const MONTHS = p.simYears * 12;

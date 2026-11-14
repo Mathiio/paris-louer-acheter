@@ -150,6 +150,18 @@ export function sanitizeLoan(raw) {
   return o;
 }
 
+/** Limite les lignes « apport personnel » au plafond de liquidités disponibles. */
+export function clampOwnContributionToCap(loans, cap) {
+  const limit = Math.max(0, cap);
+  let remaining = limit;
+  return loans.map(l => {
+    if (l.role !== 'own_contribution') return l;
+    const amount = Math.min(Math.max(0, l.amount), remaining);
+    remaining -= amount;
+    return { ...l, amount };
+  });
+}
+
 /** Total apport personnel (lignes dédiées, sinon repli params.apport). */
 export function ownContributionTotal(params) {
   const loans = resolveLoansList(params);

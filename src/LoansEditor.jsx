@@ -24,7 +24,14 @@ function patchLoan(loans, id, patch) {
   return loans.map(l => (l.id === id ? sanitizeLoan({ ...l, ...patch }) : l));
 }
 
-export default function LoansEditor({ loans, setLoans, resolvedLoans, meta, debtRatioCap = 0.35 }) {
+export default function LoansEditor({
+  loans,
+  setLoans,
+  resolvedLoans,
+  meta,
+  debtRatioCap = 0.35,
+  maxOwnContribution,
+}) {
   const roleOrder = { own_contribution: 0, help_at_purchase: 1, mortgage: 2 };
   const list = [...(loans ?? [])].sort(
     (a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9),
@@ -43,6 +50,12 @@ export default function LoansEditor({ loans, setLoans, resolvedLoans, meta, debt
         const principal = resolved?.principal ?? 0;
         const isHelp = loan.role === 'help_at_purchase';
         const isOwn = loan.role === 'own_contribution';
+        const otherOwn = list
+          .filter(l => l.role === 'own_contribution' && l.id !== loan.id)
+          .reduce((s, l) => s + l.amount, 0);
+        const ownMax = isOwn
+          ? Math.max(0, (maxOwnContribution ?? 0) - otherOwn)
+          : 400_000;
         const showAmount = loan.amountMode === 'manual' || isHelp || isOwn;
         const showTerm = !isHelp && !isOwn && loan.repayMode === 'amortize';
 
@@ -99,12 +112,17 @@ export default function LoansEditor({ loans, setLoans, resolvedLoans, meta, debt
             {showAmount && (
               <SimSlider
                 label={isOwn ? 'Montant apporté' : 'Capital'}
-                valueLabel={fmt(loan.amount)}
+                valueLabel={fmt(isOwn ? Math.min(loan.amount, ownMax) : loan.amount)}
                 min={0}
-                max={isOwn ? 200000 : 400000}
+                max={isOwn ? ownMax : 400_000}
                 step={1000}
-                value={loan.amount}
-                onChange={v => update(loan.id, { amount: v })}
+                value={isOwn ? Math.min(loan.amount, ownMax) : loan.amount}
+                onChange={v => update(loan.id, {
+                  amount: isOwn ? Math.min(v, ownMax) : v,
+                })}
+                info={isOwn && maxOwnContribution != null ? (
+                  <>Plafond : {fmt(maxOwnContribution)} (patrimoine au démarrage de l&apos;achat).</>
+                ) : undefined}
               />
             )}
 

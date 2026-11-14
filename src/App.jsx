@@ -7,8 +7,8 @@ import {
   loadTheme, saveTheme, normalizeParams, loadActiveView, saveActiveView,
   loadSidebarOpen, saveSidebarOpen, loadBootstrapParams, fetchLocalDefaults,
 } from './utils.js';
-import { runSimulation } from './simulator.js';
-import { ownContributionTotal } from './loans.js';
+import { runSimulation, wealthAtPurchase } from './simulator.js';
+import { ownContributionTotal, clampOwnContributionToCap, sanitizeLoan } from './loans.js';
 import Sidebar from './Sidebar.jsx';
 import AppNav from './AppNav.jsx';
 import ProjectionChart from './ProjectionChart.jsx';
@@ -160,7 +160,23 @@ export default function App() {
   const set = (key, value) => setParams(prev => ({ ...prev, [key]: value }));
   const setPortfolio = (portfolio) => setParams(prev => ({ ...prev, portfolio }));
   const setLoans = (loans) => setParams(prev => {
-    const next = { ...prev, loans };
+    const sanitized = (loans ?? []).map(sanitizeLoan);
+    const simSlice = {
+      ...prev,
+      loans: sanitized,
+      currentWealth: totalWealth(prev),
+      savingsYield: effectiveSavingsYield(prev),
+      apportReserveYield: livretARate(prev),
+    };
+    const cap = wealthAtPurchase(simSlice);
+    const capped = clampOwnContributionToCap(sanitized, cap);
+    const unchanged = capped.every(
+      (l, i) => sanitized[i]?.id === l.id && sanitized[i]?.amount === l.amount,
+    );
+    if (unchanged && ownContributionTotal(prev) === ownContributionTotal({ ...prev, loans: capped })) {
+      return prev;
+    }
+    const next = { ...prev, loans: capped };
     next.aport = ownContributionTotal(next);
     return next;
   });
@@ -198,6 +214,14 @@ export default function App() {
     try { return runSimulation(simParams); }
     catch (e) { console.error(e); return null; }
   }, [simParams]);
+
+  const purchaseWealthCap = useMemo(() => wealthAtPurchase(simParams), [simParams]);
+  const apportTotal = ownContributionTotal(params);
+
+  useEffect(() => {
+    if (!params.loans?.length || apportTotal <= purchaseWealthCap) return;
+    setLoans(params.loans);
+  }, [purchaseWealthCap, apportTotal, params.loans]);
 
   const effectiveWealth = result?.meta?.waiting?.effectiveWealth ?? wealth;
   const waiting = result?.meta?.waiting;

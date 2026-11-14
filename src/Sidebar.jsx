@@ -192,6 +192,7 @@ export default function Sidebar({ p, set, setLoans, wealth, result }) {
             resolvedLoans={meta?.resolvedLoans}
             meta={meta}
             debtRatioCap={p.debtRatioCap ?? 0.35}
+            maxOwnContribution={wealthAtStart}
           />
         </SimSettingsBlock>
 
