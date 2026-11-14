@@ -150,6 +150,34 @@ export function sanitizeLoan(raw) {
   return o;
 }
 
+/** Compare deux listes de prêts (ordre indifférent). */
+export function loansListEqual(a, b) {
+  const left = a ?? [];
+  const right = b ?? [];
+  if (left.length !== right.length) return false;
+  const byId = arr => Object.fromEntries(arr.map(l => [l.id, sanitizeLoan(l)]));
+  const A = byId(left);
+  const B = byId(right);
+  for (const id of Object.keys(A)) {
+    const la = A[id];
+    const lb = B[id];
+    if (!lb) return false;
+    if (
+      la.role !== lb.role
+      || la.amountMode !== lb.amountMode
+      || la.amount !== lb.amount
+      || la.rate !== lb.rate
+      || la.insuranceRate !== lb.insuranceRate
+      || la.years !== lb.years
+      || la.hcsf !== lb.hcsf
+      || la.repayMode !== lb.repayMode
+      || la.fixedRepay !== lb.fixedRepay
+      || la.label !== lb.label
+    ) return false;
+  }
+  return true;
+}
+
 /** Limite les lignes « apport personnel » au plafond de liquidités disponibles. */
 export function clampOwnContributionToCap(loans, cap) {
   const limit = Math.max(0, cap);

@@ -95,7 +95,7 @@ export default function LoansEditor({
                   />
                 )}
               </div>
-              {(list.length > 1 || loan.role === 'own_contribution') && (
+              {!(list.length === 1 && loan.role === 'own_contribution') && (
                 <Button
                   size="sm"
                   variant="tertiary"

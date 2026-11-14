@@ -8,7 +8,9 @@ import {
   loadSidebarOpen, saveSidebarOpen, loadBootstrapParams, fetchLocalDefaults,
 } from './utils.js';
 import { runSimulation, wealthAtPurchase } from './simulator.js';
-import { ownContributionTotal, clampOwnContributionToCap, sanitizeLoan } from './loans.js';
+import {
+  ownContributionTotal, clampOwnContributionToCap, sanitizeLoan, loansListEqual,
+} from './loans.js';
 import Sidebar from './Sidebar.jsx';
 import AppNav from './AppNav.jsx';
 import ProjectionChart from './ProjectionChart.jsx';
@@ -170,15 +172,9 @@ export default function App() {
     };
     const cap = wealthAtPurchase(simSlice);
     const capped = clampOwnContributionToCap(sanitized, cap);
-    const unchanged = capped.every(
-      (l, i) => sanitized[i]?.id === l.id && sanitized[i]?.amount === l.amount,
-    );
-    if (unchanged && ownContributionTotal(prev) === ownContributionTotal({ ...prev, loans: capped })) {
-      return prev;
-    }
-    const next = { ...prev, loans: capped };
-    next.aport = ownContributionTotal(next);
-    return next;
+    const nextApport = ownContributionTotal({ ...prev, loans: capped });
+    if (loansListEqual(prev.loans, capped) && prev.aport === nextApport) return prev;
+    return { ...prev, loans: capped, aport: nextApport };
   });
 
   const resetToDefaults = () => {
