@@ -84,11 +84,11 @@ Le dossier `dist/` contient les fichiers statiques déployables.
 
 Le fichier [`netlify.toml`](netlify.toml) configure build et publication (`dist/`).
 
-1. Poussez le dépôt sur GitHub (`paris-louer-acheter`).
-2. Sur [Netlify](https://app.netlify.com) : **Add new site** → **Import an existing project** → GitHub → sélectionnez le dépôt.
-3. Netlify lit `netlify.toml` automatiquement ; validez **Deploy site**.
+1. Créez le dépôt GitHub [`paris-louer-acheter`](https://github.com/Mathiio/paris-louer-acheter) et poussez `main`.
+2. Sur [Netlify](https://app.netlify.com/projects/paris-louer-acheter/configuration/deploys) : section **Build & deploy** → **Continuous deployment** → lier le dépôt GitHub (branche `main`). Netlify lit `netlify.toml` (`npm run build` → `dist/`).
+3. Chaque **push sur `main`** déclenche un build Netlify (plus besoin de `netlify deploy` en local).
 
-Chaque push sur la branche `main` redéploie le site. Aucune variable d’environnement n’est requise.
+Aucune variable d’environnement n’est requise pour ce projet statique.
 
 **Démo en ligne :** [paris-louer-acheter.netlify.app](https://paris-louer-acheter.netlify.app) (avec les hypothèses de démonstration du dépôt, pas vos données locales).
 
